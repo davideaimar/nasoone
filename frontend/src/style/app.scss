@@ -1,0 +1,32 @@
+@import url('typography.scss');
+@import url('button.scss');
+
+:root{
+  --color-primary-text: #ffffff;
+  --color-secondary-text: #CCCCCC;
+  --color-background: #001220;
+  --color-accent-primary: #0066FF;
+  --color-accent-secondary: #B635D7;
+
+  color: var(--color-primary-text);
+  background-color: var(--color-background);
+}
+
+html {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+body {
+  height: 100%;
+  padding: 0;
+  overflow: auto;
+  margin: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+#app {
+  padding: 14px;
+}
+
