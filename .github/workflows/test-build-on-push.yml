@@ -17,6 +17,10 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 16
+      - name: setup ssh key
+        run: |
+          eval `ssh-agent -s`
+          ssh-add - <<< '${{ secrets.PRIVATE_SSH_KEY }}'
       - name: install Rust stable
         uses: actions-rs/toolchain@v1
         with:
