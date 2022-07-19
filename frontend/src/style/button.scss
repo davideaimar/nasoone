@@ -19,3 +19,7 @@ button:focus,
 button:focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
 }
+
+.bg-accent-secondary {
+    background-color: var(--color-accent-secondary);
+}

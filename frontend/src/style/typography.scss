@@ -25,7 +25,8 @@ a {
   font-weight: 500;
   color: var(--color-accent-secondary);
   text-decoration: inherit;
-  &:hover {
-    color: var(--color-accent-primary);
-  }
+}
+
+a:hover {
+  color: var(--color-accent-primary);
 }
