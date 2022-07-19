@@ -19,7 +19,7 @@ jobs:
           node-version: 16
       - uses: webfactory/ssh-agent@v0.5.4
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY }}
       - name: install Rust stable
         uses: actions-rs/toolchain@v1
         with:
