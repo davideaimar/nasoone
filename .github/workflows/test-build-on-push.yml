@@ -38,6 +38,9 @@ jobs:
       - name: Install libpcap (macos)
         if: matrix.platform == 'macos-latest'
         run: brew install libpcap
+      - name: Update cargo config to use Git CLI
+        if: matrix.platform == 'windows-latest'
+        run: Set-Content -Path $env:USERPROFILE\.cargo\config.toml "[net]`ngit-fetch-with-cli = true"
       - name: Install WinPcap and WinPcap 4.1.2 Developer's Pack (windows)
         if: matrix.platform == 'windows-latest'
         run: |
