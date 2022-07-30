@@ -3,14 +3,37 @@
     windows_subsystem = "windows"
 )]
 
-use nasoone_lib::Nasoone;
+use std::path::Path;
+use nasoone_lib::{Nasoone};
 use std::sync::Mutex;
 use tauri::State;
 
 #[tauri::command]
-fn get_devices() -> String {
-    let devices = Nasoone::list_devices().unwrap();
-    serde_json::to_string(&devices).unwrap()
+fn get_devices() -> Result<String, String> {
+    let devices = Nasoone::list_devices().map_err(|e| e.to_string())?;
+    let devices = devices.into_iter().map(|d| d.to_string()).collect::<Vec<_>>();
+    Ok(serde_json::to_string(&devices).unwrap())
+}
+
+#[tauri::command]
+fn pause(state: State<Mutex<Nasoone>>) -> Result<String, String> {
+    let mut nasoone = state.lock().unwrap();
+    nasoone.pause().map_err(|e| e.to_string())?;
+    Ok("Nasoone paused".to_string())
+}
+
+#[tauri::command]
+fn stop(state: State<Mutex<Nasoone>>) -> Result<String, String> {
+    let mut nasoone = state.lock().unwrap();
+    nasoone.stop().map_err(|e| e.to_string())?;
+    Ok("Nasoone stopped".to_string())
+}
+
+#[tauri::command]
+fn resume(state: State<Mutex<Nasoone>>) -> Result<String, String> {
+    let mut nasoone = state.lock().unwrap();
+    nasoone.resume().map_err(|e| e.to_string())?;
+    Ok("Nasoone resumed".to_string())
 }
 
 #[tauri::command]
@@ -22,11 +45,16 @@ fn start(
     state: State<Mutex<Nasoone>>,
 ) -> Result<String, String> {
     let mut nasoone = state.lock().unwrap();
+    let output_path = Path::new(output_folder).join(filename);
     nasoone
         .set_capture_device(device)
         .map_err(|_| "Unable to set Nasoone capture device".to_string())?;
-    let _output_path = format!("{}/{}", output_folder, filename);
-    let _interval = interval;
+    nasoone
+        .set_output(output_path.into_os_string().into_string().unwrap().as_str())
+        .map_err(|_| "Unable to set Nasoone output path".to_string())?;
+    nasoone
+        .set_timeout(interval)
+        .map_err(|_| "Unable to set Nasoone timeout".to_string())?;
     nasoone
         .start()
         .map_err(|_| "Unable to start Nasoone".to_string())?;
@@ -36,7 +64,7 @@ fn start(
 fn main() {
     tauri::Builder::default()
         .manage(Mutex::new(Nasoone::default()))
-        .invoke_handler(tauri::generate_handler![get_devices, start])
+        .invoke_handler(tauri::generate_handler![get_devices, start, pause, stop, resume])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
