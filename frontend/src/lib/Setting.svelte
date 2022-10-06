@@ -1,15 +1,14 @@
 <script async lang="ts">
-  import { invoke } from "@tauri-apps/api";
+  import {invoke} from "@tauri-apps/api";
   import * as dialog from "@tauri-apps/api/dialog";
-  import { desktopDir } from "@tauri-apps/api/path";
-  import type { NasooneSettings } from "src/types/NasooneSettings";
+  import {desktopDir} from "@tauri-apps/api/path";
+  import type {NasooneSettings} from "src/types/NasooneSettings";
 
   export let settings: NasooneSettings;
 
   // on startup, set the default output folder to desktop
   (async () => {
-    const desktop_dir = (await desktopDir()) as string;
-    settings.folder = desktop_dir;
+    settings.folder = (await desktopDir()) as string;
   })();
 
   // on startup, load devices and set the default device to the first one in the list
@@ -84,6 +83,12 @@
       step="1"
       bind:value={settings.interval}
     />
+  </div>
+  <div>
+    <label for="filter">Filter <a href="https://biot.com/capstats/bpf.html" target="_blank">[BPF syntax]</a></label>
+    <textarea
+      id="filter"
+      bind:value={settings.filter}></textarea>
   </div>
 </div>
 
