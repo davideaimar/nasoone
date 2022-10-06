@@ -3,6 +3,7 @@
     windows_subsystem = "windows"
 )]
 
+use tauri_plugin_fs_extra::FsExtra;
 use std::path::Path;
 use nasoone_lib::{Nasoone};
 use std::sync::Mutex;
@@ -23,6 +24,14 @@ fn pause(state: State<Mutex<Nasoone>>) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn reset(state: State<Mutex<Nasoone>>) -> Result<String, String> {
+    let new_naso = Nasoone::default();
+    let mut nasoone = state.lock().unwrap();
+    *nasoone = new_naso;
+    Ok("Nasoone resetted".to_string())
+}
+
+#[tauri::command]
 fn stop(state: State<Mutex<Nasoone>>) -> Result<String, String> {
     let mut nasoone = state.lock().unwrap();
     nasoone.stop().map_err(|e| e.to_string())?;
@@ -37,11 +46,18 @@ fn resume(state: State<Mutex<Nasoone>>) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn get_total_packets(state: State<Mutex<Nasoone>>) -> usize {
+    let mut nasoone = state.lock().unwrap();
+    nasoone.get_total_packets()
+}
+
+#[tauri::command]
 fn start(
     device: &str,
     output_folder: &str,
     filename: &str,
     interval: u32,
+    filter: &str,
     state: State<Mutex<Nasoone>>,
 ) -> Result<String, String> {
     let mut nasoone = state.lock().unwrap();
@@ -55,6 +71,11 @@ fn start(
     nasoone
         .set_timeout(interval)
         .map_err(|_| "Unable to set Nasoone timeout".to_string())?;
+    if !filter.is_empty() {
+        nasoone
+            .set_filter(filter)
+            .map_err(|_| "Invalid BPF filter".to_string())?;
+    }
     nasoone
         .start()
         .map_err(|_| "Unable to start Nasoone".to_string())?;
@@ -63,8 +84,9 @@ fn start(
 
 fn main() {
     tauri::Builder::default()
+        .plugin(FsExtra::default())
         .manage(Mutex::new(Nasoone::default()))
-        .invoke_handler(tauri::generate_handler![get_devices, start, pause, stop, resume])
+        .invoke_handler(tauri::generate_handler![get_devices, start, pause, stop, resume, reset, get_total_packets])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
