@@ -1,6 +1,6 @@
 [package]
 name = "nasoone"
-version = "0.1.0"
+version = "0.2.0"
 description = "An app to get statistics on network traffic"
 authors = ["davide.aimar99@gmail.com"]
 license = ""
@@ -19,9 +19,6 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.1.1", features = ["api-all"] }
 nasoone-lib = { git = "ssh://git@github.com/davideaimar/nasoone-lib.git", branch = "dev-davide" }
-
-[dependencies.tauri-plugin-fs-extra]
-git = "https://github.com/tauri-apps/tauri-plugin-fs-extra"
 
 [features]
 # by default Tauri runs in production mode

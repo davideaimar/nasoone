@@ -2,7 +2,7 @@
     import * as dialog from "@tauri-apps/api/dialog";
     import type {ReportEntry} from "../types/ReportEntry";
     import {readTextFile} from "@tauri-apps/api/fs";
-    import {metadata} from "tauri-plugin-fs-extra-api";
+    import {invoke} from "@tauri-apps/api";
 
     let report_data: ReportEntry[] = [];
     let report_path: string = "";
@@ -45,30 +45,42 @@
     const parse_file = async () => {
         if (!report_path || report_path === "")
             return;
-        const file_info = await metadata(report_path);
-        if (!file_size || file_info.size != file_size) {
-            file_size = file_info.size;
-            const result = await readTextFile(report_path);
-            const entries = result.split("\n").slice(1)
-            if (entries.length > 0)
-                report_data = [];
-            for (let i = 0; i < entries.length; i++) {
-                const [src_ip, src_port, dst_ip, dst_port, protocols, first_ts, last_ts, bytes, packets] = entries[i].split(";");
-                if (src_ip && src_port && dst_ip && dst_port && protocols && first_ts && last_ts && bytes && packets)
-                    report_data.push({
-                        source_ip: src_ip,
-                        source_port: src_port,
-                        dest_ip: dst_ip,
-                        dest_port: dst_port,
-                        protocols: protocols,
-                        first_ts: first_ts,
-                        last_ts: last_ts,
-                        bytes: Number(bytes),
-                        packets: Number(packets)
-                    } as ReportEntry);
+        try {
+            const new_size: number = await invoke("get_file_size", {
+                path: report_path
+            });
+            if (!file_size || new_size != file_size) {
+                file_size = new_size;
+                const result = await readTextFile(report_path);
+                const headers = result.split("\n")[0];
+                if (headers.replaceAll(" ", "") !== "sourceip;sourceport;destinationip;destinationport;protocols;first;last;bytes;packets") {
+                    alert("Invalid file");
+                    report_path = "";
+                    return;
+                }
+                const entries = result.split("\n").slice(1)
+                if (entries.length > 0)
+                    report_data = [];
+                for (let i = 0; i < entries.length; i++) {
+                    const [src_ip, src_port, dst_ip, dst_port, protocols, first_ts, last_ts, bytes, packets] = entries[i].split(";");
+                    if (src_ip && src_port && dst_ip && dst_port && protocols && first_ts && last_ts && bytes && packets)
+                        report_data.push({
+                            source_ip: src_ip,
+                            source_port: src_port,
+                            dest_ip: dst_ip,
+                            dest_port: dst_port,
+                            protocols: protocols,
+                            first_ts: first_ts,
+                            last_ts: last_ts,
+                            bytes: Number(bytes),
+                            packets: Number(packets)
+                        } as ReportEntry);
+                }
+                report_data = report_data.sort((a, b) => a.first_ts - b.first_ts);
+                console.log("Data loaded!");
             }
-            report_data = report_data.sort((a, b) => a.first_ts - b.first_ts);
-            console.log("Data loaded");
+        } catch (e) {
+            console.log(e);
         }
     }
 

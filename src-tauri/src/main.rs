@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use tauri_plugin_fs_extra::FsExtra;
 use std::path::Path;
 use nasoone_lib::{Nasoone};
 use std::sync::Mutex;
@@ -14,6 +13,12 @@ fn get_devices() -> Result<String, String> {
     let devices = Nasoone::list_devices().map_err(|e| e.to_string())?;
     let devices = devices.into_iter().map(|d| d.to_string()).collect::<Vec<_>>();
     Ok(serde_json::to_string(&devices).unwrap())
+}
+
+#[tauri::command]
+fn get_file_size(path: &str) -> Result<u64, String> {
+    let meta = std::fs::metadata(path).map_err(|_| "Failed to get file size".to_string())?;
+    Ok(meta.len())
 }
 
 #[tauri::command]
@@ -84,9 +89,8 @@ fn start(
 
 fn main() {
     tauri::Builder::default()
-        .plugin(FsExtra::default())
         .manage(Mutex::new(Nasoone::default()))
-        .invoke_handler(tauri::generate_handler![get_devices, start, pause, stop, resume, reset, get_total_packets])
+        .invoke_handler(tauri::generate_handler![get_devices, start, pause, stop, resume, reset, get_total_packets, get_file_size])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
