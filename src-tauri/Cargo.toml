@@ -1,11 +1,11 @@
 [package]
-name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+name = "nasoone"
+version = "0.2.0"
+description = "An app to get statistics on network traffic"
+authors = ["davide.aimar99@gmail.com"]
 license = ""
 repository = ""
-default-run = "app"
+default-run = "nasoone"
 edition = "2021"
 rust-version = "1.57"
 
@@ -17,8 +17,8 @@ tauri-build = { version = "1.0.4", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.0.4", features = ["api-all"] }
-nasoone-lib = { git = "ssh://git@github.com/davideaimar/nasoone-lib.git", branch = "master" }
+tauri = { version = "1.1.1", features = ["api-all"] }
+nasoone-lib = { git = "ssh://git@github.com/davideaimar/nasoone-lib.git", branch = "dev-davide" }
 
 [features]
 # by default Tauri runs in production mode

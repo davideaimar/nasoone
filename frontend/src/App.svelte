@@ -1,46 +1,50 @@
 <script lang="ts">
-  import Setting from "./lib/Setting.svelte";
-  import type { NasooneSettings } from "./types/NasooneSettings";
-  import { invoke } from "@tauri-apps/api";
+  import InitialState from "./lib/InitialState.svelte";
+  import {State} from "./types/State";
+  import RunningState from "./lib/RunningState.svelte";
+  import {Tab} from "./types/Tab";
+  import ViewTab from "./lib/ViewTab.svelte";
+  import { SvelteToast } from '@zerodevx/svelte-toast'
 
-  let params: NasooneSettings = {
-    device: "",
-    folder: "",
-    interval: 5,
-    file_name: "nasoone_" + new Date().getTime(),
-  };
-
-  const start = async () => {
-    try {
-      const result = await invoke("start", {
-        device: params.device, 
-        outputFolder: params.folder, 
-        filename: params.file_name,
-        interval: params.interval
-      });
-      alert(result);
-    } catch (e) {
-      alert(e);
-    }
-  };
-
+  let state = State.Initial;
+  let tab = Tab.Run;
 </script>
 
 <main>
-  <h1>Nasoone</h1>
-  <p>Specify the parameters and start the capture.</p>
-  <div>
-    <Setting bind:settings={params} />
-    <button id="start" class="bg-accent-secondary" on:click={start}>Start</button>
+
+  <SvelteToast/>
+
+  <div class="tab-buttons-wrapper">
+    <button class:selected="{tab === Tab.Run}" on:click={() => tab = Tab.Run}>Run</button>
+    <button class:selected="{tab === Tab.View}" on:click={() => tab = Tab.View}>View</button>
   </div>
-  <div>
-    <p>Logging: </p>
-    <code>
-      <pre>settings: {JSON.stringify(params, null, 2)}
-      </pre>
-    </code>
+
+  <div style="display: {tab === Tab.View ? 'block' : 'none' }">
+    <ViewTab />
   </div>
+
+  <div style="display: {tab === Tab.Run ? 'block' : 'none' }">
+    {#if (state === State.Initial)}
+      <InitialState bind:state={state} />
+    {:else if (state === State.Running) || (state === State.Paused)}
+      <RunningState bind:state={state} />
+    {/if}
+  </div>
+
 </main>
 
-<style>
+<style type="scss">
+  .tab-buttons-wrapper{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+    & button{
+      background-color: initial;
+      border-radius: 0;
+    }
+    & button.selected{
+      border-top: 3px solid var(--color-accent-secondary);
+    }
+  }
 </style>

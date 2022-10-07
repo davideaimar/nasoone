@@ -2,5 +2,6 @@ export type NasooneSettings = {
   device: string,
   folder: string,
   interval: number,
-  file_name: string
+  file_name: string,
+  filter: string,
 };
