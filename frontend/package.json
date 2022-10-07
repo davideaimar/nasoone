@@ -1,7 +1,7 @@
 {
   "name": "nasoone",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.1.0",
-    "@tauri-apps/cli": "^1.1.1",
-    "tauri-plugin-fs-extra-api": "github:tauri-apps/tauri-plugin-fs-extra"
+    "@tauri-apps/cli": "^1.1.1"
   }
 }
