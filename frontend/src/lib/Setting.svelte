@@ -35,7 +35,7 @@
     }
   };
 
-  let filter_types = ["BPF", "IP; MAC; Port"];
+  let filter_types = ["BPF", "Easier filtering"];
 
   let filter = '';
 
@@ -56,7 +56,7 @@
     else {
       html = `<div> 
         <label for="filter">Filter 
-          <a href="https://biot.com/capstats/bpf.html" target="_blank">[IP; MAC; Port]</a>
+          <a href="https://biot.com/capstats/bpf.html" target="_blank">[Use the sintax: IP;MAC;Port]</a>
         </label>
         <textarea id="filter" bind:value={settings.filter}></textarea>
         </div>`;
