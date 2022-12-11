@@ -34,6 +34,35 @@
       settings.folder = folder[0];
     }
   };
+
+  let filter_types = ["BPF", "IP; MAC; Port"];
+
+  let filter = '';
+
+  let html = ''
+
+  const handleFilters = async () => {
+    if (filter === "BPF") {
+      html = `<div> 
+        <label for="filter">Filter 
+          <a href="https://biot.com/capstats/bpf.html" target="_blank">[BPF syntax]</a>
+        </label>
+        <textarea id="filter" bind:value={settings.filter}></textarea>
+        </div>`;
+    }
+    else if (filter === "No filters") {
+      html = "";
+    }
+    else {
+      html = `<div> 
+        <label for="filter">Filter 
+          <a href="https://biot.com/capstats/bpf.html" target="_blank">[IP; MAC; Port]</a>
+        </label>
+        <textarea id="filter" bind:value={settings.filter}></textarea>
+        </div>`;
+    }
+  } 
+
 </script>
 
 <div class="settings-wrapper">
@@ -85,11 +114,23 @@
     />
   </div>
   <div>
-    <label for="filter">Filter <a href="https://biot.com/capstats/bpf.html" target="_blank">[BPF syntax]</a></label>
-    <textarea
-      id="filter"
-      bind:value={settings.filter}></textarea>
+    <label for="commmon-filters">Choose one filtering option</label>
+    <form on:change={handleFilters}>
+      <select
+        type="text"
+        name="filter"
+        id="filter"
+        readonly
+        class="cursor-pointer"
+        bind:value={filter}>
+          <option value={"No filters"}>No filters</option>
+          {#each filter_types as type}
+            <option value={type}>{type}</option>
+          {/each}
+      </select>
+    </form>
   </div>
+  <div>{@html html}</div>
 </div>
 
 <style type="scss">
