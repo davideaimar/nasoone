@@ -4,9 +4,12 @@
 )]
 
 use std::path::Path;
+use std::str::FromStr;
 use nasoone_lib::{Nasoone};
+use nasoone_lib::{Filter};
 use std::sync::Mutex;
 use tauri::State;
+use std::net::IpAddr;
 
 #[tauri::command]
 fn get_devices() -> Result<String, String> {
@@ -85,6 +88,85 @@ fn start(
         .start()
         .map_err(|_| "Unable to start Nasoone".to_string())?;
     Ok("Nasoone started".to_string())
+}
+
+#[tauri::command]
+fn new_filter() -> Filter {
+    Filter::default()
+}
+
+#[tauri::command]
+fn add_host(fil: Filter, host: &str, not: bool) -> Filter {
+    let new_filter = fil.add_host(IpAddr::from_str(host), not);
+    new_filter
+}
+
+#[tauri::command]
+fn add_src_host(fil: Filter, src_host: &str, not: bool) -> Filter {
+    let new_filter = fil.add_src_host(IpAddr::from_str(src_host), not);
+    new_filter
+}
+
+#[tauri::command]
+fn add_dst_host(fil: Filter, src_host: &str, not: bool) -> Filter {
+    let new_filter = fil.add_dst_host(IpAddr::from_str(src_host), not);
+    new_filter
+}
+
+#[tauri::command]
+fn set_ether_host(fil: Filter, ether_host: String, not: bool) -> Filter {
+    let new_filter = fil.set_eather_host(ether_host, not);
+    new_filter
+}
+
+#[tauri::command]
+fn set_ether_src_host(fil: Filter, ether_src_host: String, not: bool) -> Filter {
+    let new_filter = fil.set_eather_src_host(ether_src_host, not);
+    new_filter
+}
+
+#[tauri::command]
+fn set_ether_dst_host(fil: Filter, ether_dst_host: String, not: bool) -> Filter {
+    let new_filter = fil.set_eather_dst_host(ether_dst_host, not);
+    new_filter
+}
+
+#[tauri::command]
+fn set_protocols(fil: Filter, proto: Vec<String>) -> Result<Filter, ()> {
+    proto.iter().for_each(| p | {
+        match p.as_str() {
+            "http" => fil.set_http(true),
+            "tcp" => fil.set_tcp(true),
+            "smtp" => fil.set_smtp(true),
+            "dns" => fil.set_dns(true),
+            "udp" => fil.set_udp(true),
+            _ => Err(())
+        }
+    });
+    return Ok(fil);
+}
+
+#[tauri::command]
+fn set_port(fil: Filter, port: i32) -> Filter {
+    let new_filter = fil.set_port(port);
+    new_filter
+}
+
+#[tauri::command]
+fn set_src_port(fil: Filter, src_port: i32) -> Filter {
+    let new_filter = fil.set_src_port(src_port);
+    new_filter
+}
+
+#[tauri::command]
+fn set_dst_port(fil: Filter, dst_port: i32) -> Filter {
+    let new_filter = fil.set_dst_port(dst_port);
+    new_filter
+}
+
+#[tauri::command]
+fn get_BPF_filter(fil: Filter) -> String {
+    todo!();
 }
 
 fn main() {

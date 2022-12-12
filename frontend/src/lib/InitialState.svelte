@@ -7,8 +7,6 @@
 
     export let state: State;
 
-    // const possible_keys = ["IPs", "IPd", "MACs", "MACd", "Ports", "Portd", "Protocol"]
-
     let params: NasooneSettings = {
         device: "",
         folder: "",
@@ -20,48 +18,6 @@
     const start = async () => {
         try {
             let bpf_filters = "";
-            if(params.filter.includes(";")) {
-                let dict = new Map()
-                let list = params.filter.split(";");
-
-                for (let i = 0; i<list.length; i++) {
-                    let kv = list[i].split("=");
-                    dict.set(kv[0], kv[1])
-                }
-                
-                for (let k in dict.keys()) {
-                    switch(k){
-                        case "IPs":
-                            bpf_filters += " src host " + dict.get(k);
-                            break;
-                        case "IPd":
-                            bpf_filters += " dst host " + dict.get(k);
-                            break;
-                        case "MACs":
-                            bpf_filters += " ether src host " + dict.get(k);
-                            break;
-                        case "MACd":
-                            bpf_filters += " ether dst host " + dict.get(k);
-                            break;
-                        case "Ports":
-                            bpf_filters += " src port " + dict.get(k);
-                            break;
-                        case "Portd":
-                            bpf_filters += " dst port " + dict.get(k);
-                            break;
-                        case "Protocol":
-                            bpf_filters += dict.get(k);
-                            break;
-                    }
-                }
-
-                bpf_filters.trimStart();
-                bpf_filters.trimEnd();
-
-            }
-            else {
-                bpf_filters = params.filter;
-            }
 
             const result = await invoke("start", {
                 device: params.device,
