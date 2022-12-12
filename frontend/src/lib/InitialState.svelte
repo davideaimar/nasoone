@@ -7,6 +7,8 @@
 
     export let state: State;
 
+    // const possible_keys = ["IPs", "IPd", "MACs", "MACd", "Ports", "Portd", "Protocol"]
+
     let params: NasooneSettings = {
         device: "",
         folder: "",
@@ -18,51 +20,46 @@
     const start = async () => {
         try {
             let bpf_filters = "";
-            if (params.filter.includes(";")) {
-                const ip = params.filter.split(";")[0]
-                const mac = params.filter.split(";")[1]
-                const port = params.filter.split(";")[2]
-                let bpf_ip = '';
-                let bpf_mac = '';
-                let bpf_port = '';
+            if(params.filter.includes(";")) {
+                let dict = new Map()
+                let list = params.filter.split(";");
 
-                // Set the BPF sintax for the elements
-                if (ip !== "") {
-                    bpf_ip = "host " + ip;
+                for (let i = 0; i<list.length; i++) {
+                    let kv = list[i].split("=");
+                    dict.set(kv[0], kv[1])
                 }
-                if (mac !== "") {
-                    bpf_mac = "ether host " + mac; 
-                }
-                if (port !== "") {
-                    bpf_port = "port " + port;
+                
+                for (let k in dict.keys()) {
+                    switch(k){
+                        case "IPs":
+                            bpf_filters += " src host " + dict.get(k);
+                            break;
+                        case "IPd":
+                            bpf_filters += " dst host " + dict.get(k);
+                            break;
+                        case "MACs":
+                            bpf_filters += " ether src host " + dict.get(k);
+                            break;
+                        case "MACd":
+                            bpf_filters += " ether dst host " + dict.get(k);
+                            break;
+                        case "Ports":
+                            bpf_filters += " src port " + dict.get(k);
+                            break;
+                        case "Portd":
+                            bpf_filters += " dst port " + dict.get(k);
+                            break;
+                        case "Protocol":
+                            bpf_filters += dict.get(k);
+                            break;
+                    }
                 }
 
-                // BPF combinations
-                if (bpf_ip !== '' && bpf_mac !== '' && bpf_port !== '') {
-                    bpf_filters = bpf_ip + " AND " + bpf_mac + " AND " + bpf_port;
-                }
-                else if (bpf_ip !== '' && bpf_mac !== '') {
-                    bpf_filters = bpf_ip + " AND " + bpf_mac;
-                }
-                else if (bpf_ip !== '' && bpf_port !== '') {
-                    bpf_filters = bpf_ip + " AND " + bpf_port;
-                }
-                else if (bpf_mac !== '' && bpf_port !== '') {
-                    bpf_filters = bpf_mac + " AND " + bpf_port;
-                }
-                else {
-                    if (bpf_ip !== '') {
-                        bpf_filters = bpf_ip;
-                    }
-                    else if (bpf_mac !== '') {
-                        bpf_filters = bpf_mac;
-                    }
-                    else {
-                        bpf_filters = bpf_port;
-                    }
-                }
+                bpf_filters.trimStart();
+                bpf_filters.trimEnd();
+
             }
-            else if (params.filter !== "") {
+            else {
                 bpf_filters = params.filter;
             }
 

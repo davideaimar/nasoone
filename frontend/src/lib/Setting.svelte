@@ -56,7 +56,7 @@
     else {
       html = `<div> 
         <label for="filter">Filter 
-          <a href="https://biot.com/capstats/bpf.html" target="_blank">[Use the sintax: IP;MAC;Port]</a>
+          <a href="https://biot.com/capstats/bpf.html" target="_blank">[Use the sintax: IPs=...;IPd=...;MACs=...;MACd=...;Ports=...;Portd=...;Protocol=...]</a>
         </label>
         <textarea id="filter" bind:value={settings.filter}></textarea>
         </div>`;
