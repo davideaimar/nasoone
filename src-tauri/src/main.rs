@@ -108,33 +108,33 @@ fn add_src_host(fil: Filter, src_host: &str, not: bool) -> Filter {
 }
 
 #[tauri::command]
-fn add_dst_host(fil: Filter, src_host: &str, not: bool) -> Filter {
-    let new_filter = fil.add_dst_host(IpAddr::from_str(src_host), not);
+fn add_dst_host(fil: Filter, dst_host: &str, not: bool) -> Filter {
+    let new_filter = fil.add_dst_host(IpAddr::from_str(dst_host), not);
     new_filter
 }
 
 #[tauri::command]
-fn set_ether_host(fil: Filter, ether_host: String, not: bool) -> Filter {
+fn set_ether_host(fil: Filter, ether_host: &str, not: bool) -> Filter {
     let new_filter = fil.set_eather_host(ether_host, not);
     new_filter
 }
 
 #[tauri::command]
-fn set_ether_src_host(fil: Filter, ether_src_host: String, not: bool) -> Filter {
+fn set_ether_src_host(fil: Filter, ether_src_host: &str, not: bool) -> Filter {
     let new_filter = fil.set_eather_src_host(ether_src_host, not);
     new_filter
 }
 
 #[tauri::command]
-fn set_ether_dst_host(fil: Filter, ether_dst_host: String, not: bool) -> Filter {
+fn set_ether_dst_host(fil: Filter, ether_dst_host: &str, not: bool) -> Filter {
     let new_filter = fil.set_eather_dst_host(ether_dst_host, not);
     new_filter
 }
 
 #[tauri::command]
-fn set_protocols(fil: Filter, proto: Vec<String>) -> Result<Filter, ()> {
-    proto.iter().for_each(| p | {
-        match p.as_str() {
+fn set_protocols(fil: Filter, proto: Vec<&str>) -> Result<Filter, ()> {
+    proto.into_iter().for_each(| p | {
+        match p {
             "http" => fil.set_http(true),
             "tcp" => fil.set_tcp(true),
             "smtp" => fil.set_smtp(true),
@@ -166,7 +166,7 @@ fn set_dst_port(fil: Filter, dst_port: i32) -> Filter {
 
 #[tauri::command]
 fn get_BPF_filter(fil: Filter) -> String {
-    todo!();
+    return fil.toString()
 }
 
 fn main() {

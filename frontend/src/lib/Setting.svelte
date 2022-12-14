@@ -35,33 +35,37 @@
     }
   };
 
-  let filter_types = ["BPF", "Easier filtering"];
+  let filter_types = ["BPF", "Easy filtering"];
+
+  let ip_filter = '';
+
+  let mac_filter = '';
+
+  let port_filter = '';
+
+  let proto_filter = '';
 
   let filter = '';
 
-  let html = ''
+  let html = 0;
 
-  const handleFilters = async () => {
-    if (filter === "BPF") {
-      html = `<div> 
-        <label for="filter">Filter 
-          <a href="https://biot.com/capstats/bpf.html" target="_blank">[BPF syntax]</a>
-        </label>
-        <textarea id="filter" bind:value={settings.filter}></textarea>
-        </div>`;
+  const set_filters = async () => {
+    if (html === 2) {
+      settings.filter = ip_filter.concat(mac_filter).concat(port_filter).concat(proto_filter);
     }
-    else if (filter === "No filters") {
-      html = "";
+  }
+
+  const handleFlag = async () => {
+    if (filter === "BPF") {
+      html = 1;
+    }
+    else if (filter === "Easy filtering") {
+      html = 2;
     }
     else {
-      html = `<div> 
-        <label for="filter">Filter 
-          <a href="https://biot.com/capstats/bpf.html" target="_blank">[Use the sintax: IPs=...;IPd=...;MACs=...;MACd=...;Ports=...;Portd=...;Protocol=...]</a>
-        </label>
-        <textarea id="filter" bind:value={settings.filter}></textarea>
-        </div>`;
+      html = 0;
     }
-  } 
+  }
 
 </script>
 
@@ -115,7 +119,7 @@
   </div>
   <div>
     <label for="commmon-filters">Choose one filtering option</label>
-    <form on:change={handleFilters}>
+    <form on:change={handleFlag}>
       <select
         type="text"
         name="filter"
@@ -130,7 +134,37 @@
       </select>
     </form>
   </div>
-  <div>{@html html}</div>
+  <div>
+    {#if html === 0}
+      <label for="filter">No filtering actions</label>
+    {/if}
+    {#if html === 1}
+      <label for="filter">Filter 
+        <a href="https://biot.com/capstats/bpf.html" target="_blank">[BPF syntax]</a>
+      </label>
+      <textarea id="filter" bind:value={settings.filter}></textarea>
+      <button id="set-filters" class="bg-accent-success" on:click={set_filters}>Set Filters</button>
+    {/if}
+    {#if html === 2}
+      <label for="ip-filter">IP Address 
+        <a href="https://github.com/davideaimar/nasoone" target="_blank">Use sintax: IPgeneric=[not]IP1,[not]IP2,...;IPsource=[not]IP1,[not]IP2...;IPdestination=[not]IP1,[not]IP2...;</a>
+      </label>
+      <textarea id="ip-filter" bind:value={ip_filter}></textarea>
+      <label for="mac-filter">MAC Address
+        <a href="https://github.com/davideaimar/nasoone" target="_blank">Use sintax: MACgeneric=[not]MAC1,[not]MAC2,...;MACsource=[not]MAC1,[not]MAC2,...;MACdestination=[not]MAC1,[not]MAC2,...;</a>
+      </label>
+      <textarea id="mac-filter" bind:value={mac_filter}></textarea>
+      <label for="port-filter">Port 
+        <a href="https://github.com/davideaimar/nasoone" target="_blank">Use sintax: Portgeneric=Port1,Port2,...;Portsource=Port1,Port2,...;Portdestination=Port1,Port2,...;</a>
+      </label>
+      <textarea id="port-filter" bind:value={port_filter}></textarea>
+      <label for="proto-filter">Protocols 
+        <a href="https://github.com/davideaimar/nasoone" target="_blank">Use sintax: Protocols=protocol1,protocol2,...</a>
+      </label>
+      <textarea id="prot-filter" bind:value={proto_filter}></textarea>
+      <button id="set-filters" class="bg-accent-success" on:click={set_filters}>Set Filters</button>
+    {/if}
+  </div>
 </div>
 
 <style type="scss">

@@ -4,4 +4,5 @@ export type NasooneSettings = {
   interval: number,
   file_name: string,
   filter: string,
+  BPF: boolean,
 };
