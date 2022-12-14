@@ -16,6 +16,10 @@
         BPF: false,
     };
 
+    const regex_ipv4 = new RegExp("(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
+    const regex_ipv6 = new RegExp("((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}");
+    const regex_mac = new RegExp("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$");
+
     const start = async () => {
         try {
             let filter = await invoke("new_filter", {});
@@ -36,7 +40,9 @@
                             case "IPgeneric":
                                 let list_ip = v.split(",");
                                 for (let addr in list_ip) {
-                                    // TODO: a regex to check if the IP address is in a correct form
+                                    if (regex_ipv4.test(addr) === false && regex_ipv6.test(addr) === false){
+                                        throw new Error("Invalid IP address!");
+                                    }
                                     let not = false;
                                     if (addr.includes("[not]") === true) {
                                         not = true;
@@ -48,7 +54,9 @@
                             case "IPsource":
                                 let list_ips = v.split(",");
                                 for (let addr in list_ips) {
-                                    // TODO: a regex to check if the IP address is in a correct form
+                                    if (regex_ipv4.test(addr) === false && regex_ipv6.test(addr) === false){
+                                        throw new Error("Invalid IP address!");
+                                    }
                                     let not = false;
                                     if (addr.includes("[not]") === true) {
                                         not = true;
@@ -60,7 +68,9 @@
                             case "IPdestination":
                                 let list_ipd = v.split(",");
                                 for (let addr in list_ipd) {
-                                    // TODO: a regex to check if the IP address is in a correct form
+                                    if (regex_ipv4.test(addr) === false && regex_ipv6.test(addr) === false){
+                                        throw new Error("Invalid IP address!");
+                                    }
                                     let not = false;
                                     if (addr.includes("[not]") === true) {
                                         not = true;
@@ -72,7 +82,9 @@
                             case "MACgeneric":
                                 let list_mac = v.split(",");
                                 for (let addr in list_mac) {
-                                    // TODO: a regex to check if the MAC address is in a correct form
+                                    if (regex_mac.test(addr) === false) {
+                                        throw new Error("Invalid MAC address!");
+                                    }
                                     let not = false;
                                     if (addr.includes("[not]") === true) {
                                         not = true;
@@ -84,7 +96,9 @@
                             case "MACsource":
                                 let list_macs = v.split(",");
                                 for (let addr in list_macs) {
-                                    // TODO: a regex to check if the MAC address is in a correct form
+                                    if (regex_mac.test(addr) === false) {
+                                        throw new Error("Invalid MAC address!");
+                                    }
                                     let not = false;
                                     if (addr.includes("[not]") === true) {
                                         not = true;
@@ -96,7 +110,9 @@
                             case "MACdestination":
                                 let list_macd = v.split(",");
                                 for (let addr in list_macd) {
-                                    // TODO: a regex to check if the MAC address is in a correct form
+                                    if (regex_mac.test(addr) === false) {
+                                        throw new Error("Invalid MAC address!");
+                                    }
                                     let not = false;
                                     if (addr.includes("[not]") === true) {
                                         not = true;
@@ -108,23 +124,27 @@
                             case "Portgeneric":
                                 let list_port = v.split(",");
                                 for (let port in list_port) {
-                                    try {
-                                        filter = await invoke("set_port", {fil: filter, port: parseInt(port)});
+                                    if (typeof parseInt(port) !== "number"){
+                                        throw new Error("Invalid Port!");
                                     }
-                                    catch(e) {
-                                        alert(e);            
-                                    }
+                                    filter = await invoke("set_port", {fil: filter, port: parseInt(port)});
                                 }
                                 break;
                             case "Portsource":
                                 let list_ports = v.split(",");
                                 for (let port in list_ports) {
+                                    if (typeof parseInt(port) !== "number"){
+                                        throw new Error("Invalid Port!");
+                                    }
                                     filter = await invoke("set_src_port", {fil: filter, src_port: parseInt(port)});
                                 }
                                 break;
                             case "Portdestination":
                                 let list_portd = v.split(",");
                                 for (let port in list_portd) {
+                                    if (typeof parseInt(port) !== "number"){
+                                        throw new Error("Invalid Port!");
+                                    }
                                     filter = await invoke("set_dst_port", {fil: filter, dst_port: parseInt(port)});
                                 }
                                 break;
