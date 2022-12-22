@@ -3,6 +3,9 @@
   import * as dialog from "@tauri-apps/api/dialog";
   import {desktopDir} from "@tauri-apps/api/path";
   import type {NasooneSettings} from "src/types/NasooneSettings";
+  import type {IpFilter} from "../types/IpFilter";
+  import {FilterDir} from "../types/FilterDir";
+  import type {PortFilter} from "../types/PortFilter";
 
   export let settings: NasooneSettings;
 
@@ -35,35 +38,110 @@
     }
   };
 
+  const ip_validator = /((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))/;
+
+
   let filter_types = ["BPF", "Easy filtering"];
-
-  let ip_filter = '';
-
-  let mac_filter = '';
-
-  let port_filter = '';
-
-  let proto_filter = '';
-
+  let selected_filter = 0;
   let filter = '';
 
-  let html = 0;
+  let form_ip_filter = {
+    ip: "",
+    dir: FilterDir.Both,
+  };
+  let form_port_filter = {
+    port: 0,
+    dir: FilterDir.Both,
+  };
+  let form_protocol_filter = 'No filter';
 
-  const set_filters = async () => {
-    if (html === 2) {
-      settings.filter = ip_filter.concat(mac_filter).concat(port_filter).concat(proto_filter);
+  let ips_filter: IpFilter[] = [];
+  let ports_filter: PortFilter[] = [];
+  let protocol_filters = ['No filter', 'tcp only', 'udp only'];
+
+  const add_ip_filter = () => {
+    if (ip_validator.test(form_ip_filter.ip)) {
+      ips_filter.push({
+        ip: form_ip_filter.ip,
+        dir: form_ip_filter.dir,
+      });
+      form_ip_filter = {
+        ip: "",
+        dir: FilterDir.Both,
+      };
+      ips_filter = ips_filter; // to trigger the reactivity
+      update_stored_filter();
+    } else {
+        alert("Invalid IP");
+    }
+  };
+
+  const add_port_filter = () => {
+    if (form_port_filter.port > 0 && form_port_filter.port < 65536) {
+      ports_filter.push({
+        port: form_port_filter.port,
+        dir: form_port_filter.dir,
+      });
+      form_port_filter = {
+        port: 0,
+        dir: FilterDir.Both,
+      };
+      ports_filter = ports_filter; // to trigger the reactivity
+      update_stored_filter();
+    } else {
+        alert("Invalid Port");
+    }
+  };
+
+  const update_stored_filter = async () => {
+    try {
+      settings.filter = await invoke("get_bpf_filter_from_easy_filter", {
+        srcIps: [ ... new Set(ips_filter.filter((ip) => ip.dir === FilterDir.Src || ip.dir == FilterDir.Both).map((ip) => ip.ip)) ],
+        dstIps: [ ... new Set(ips_filter.filter((ip) => ip.dir === FilterDir.Dst || ip.dir == FilterDir.Both).map((ip) => ip.ip)) ],
+        srcPorts: [ ... new Set(ports_filter.filter((port) => port.dir === FilterDir.Src || port.dir == FilterDir.Both).map((port) => port.port)) ],
+        dstPorts: [ ... new Set(ports_filter.filter((port) => port.dir === FilterDir.Dst || port.dir == FilterDir.Both).map((port) => port.port)) ],
+        tcp: form_protocol_filter === 'tcp only' || form_protocol_filter === 'No filter',
+        udp: form_protocol_filter === 'udp only' || form_protocol_filter === 'No filter',
+      });
+      console.log("New filter: " + settings.filter);
+    } catch (e) {
+      alert("Error while generating the filter: " + e);
+      console.error(e);
+    }
+  }
+
+  const remove_ip_filter = (ip_filter) => {
+    ips_filter.splice(ips_filter.indexOf(ip_filter), 1);
+    ips_filter = ips_filter; // to trigger the reactivity
+    update_stored_filter();
+  };
+
+  const remove_port_filter = (port_filter) => {
+    ports_filter.splice(ports_filter.indexOf(port_filter), 1);
+    ports_filter = ports_filter; // to trigger the reactivity
+    update_stored_filter();
+  };
+
+  const get_dir_as_text = (dir: FilterDir) => {
+    switch (dir) {
+      case FilterDir.Src:
+        return "Src";
+      case FilterDir.Dst:
+        return "Dst";
+      case FilterDir.Both:
+        return "";
     }
   }
 
   const handleFlag = async () => {
     if (filter === "BPF") {
-      html = 1;
+      selected_filter = 1;
     }
     else if (filter === "Easy filtering") {
-      html = 2;
+      selected_filter = 2;
     }
     else {
-      html = 0;
+      selected_filter = 0;
     }
   }
 
@@ -107,7 +185,7 @@
     />
   </div>
   <div>
-    <label for="interval">Interval [s]</label>
+    <label for="interval">File update interval [s]</label>
     <input
       type="number"
       id="interval"
@@ -118,13 +196,11 @@
     />
   </div>
   <div>
-    <label for="commmon-filters">Choose one filtering option</label>
+    <label for="filter-select">Choose one filtering option</label>
     <form on:change={handleFlag}>
       <select
-        type="text"
         name="filter"
-        id="filter"
-        readonly
+        id="filter-select"
         class="cursor-pointer"
         bind:value={filter}>
           <option value={"No filters"}>No filters</option>
@@ -135,34 +211,62 @@
     </form>
   </div>
   <div>
-    {#if html === 0}
+    {#if selected_filter === 0}
       <label for="filter">No filtering actions</label>
     {/if}
-    {#if html === 1}
+    {#if selected_filter === 1}
       <label for="filter">Filter 
         <a href="https://biot.com/capstats/bpf.html" target="_blank">[BPF syntax]</a>
       </label>
       <textarea id="filter" bind:value={settings.filter}></textarea>
-      <button id="set-filters" class="bg-accent-success" on:click={set_filters}>Set Filters</button>
     {/if}
-    {#if html === 2}
-      <label for="ip-filter">IP Address 
-        <a href="https://github.com/davideaimar/nasoone" target="_blank">Use sintax: IPgeneric=[not]IP1,[not]IP2,...;IPsource=[not]IP1,[not]IP2...;IPdestination=[not]IP1,[not]IP2...;</a>
-      </label>
-      <textarea id="ip-filter" bind:value={ip_filter}></textarea>
-      <label for="mac-filter">MAC Address
-        <a href="https://github.com/davideaimar/nasoone" target="_blank">Use sintax: MACgeneric=[not]MAC1,[not]MAC2,...;MACsource=[not]MAC1,[not]MAC2,...;MACdestination=[not]MAC1,[not]MAC2,...;</a>
-      </label>
-      <textarea id="mac-filter" bind:value={mac_filter}></textarea>
-      <label for="port-filter">Port 
-        <a href="https://github.com/davideaimar/nasoone" target="_blank">Use sintax: Portgeneric=Port1,Port2,...;Portsource=Port1,Port2,...;Portdestination=Port1,Port2,...;</a>
-      </label>
-      <textarea id="port-filter" bind:value={port_filter}></textarea>
-      <label for="proto-filter">Protocols 
-        <a href="https://github.com/davideaimar/nasoone" target="_blank">Use sintax: Protocols=protocol1,protocol2,...</a>
-      </label>
-      <textarea id="prot-filter" bind:value={proto_filter}></textarea>
-      <button id="set-filters" class="bg-accent-success" on:click={set_filters}>Set Filters</button>
+    {#if selected_filter === 2}
+      <label>IP Addresses</label>
+      <div class="inserted_ips_wrapper">
+        {#each ips_filter as ip_filter}
+          <span>
+            {ip_filter.ip} {get_dir_as_text(ip_filter.dir)}
+            <button on:click={() => remove_ip_filter(ip_filter)} aria-label="click to remove">X</button>
+          </span>
+        {/each}
+      </div>
+      <div>
+        <form id="ip_filter_form">
+          <input type="text" bind:value={form_ip_filter.ip} placeholder="Ip address" />
+          <select bind:value={form_ip_filter.dir}>
+            <option value={FilterDir.Both}>both</option>
+            <option value={FilterDir.Src}>src</option>
+            <option value={FilterDir.Dst}>dst</option>
+          </select>
+          <button type="button" on:click={add_ip_filter}>Add</button>
+        </form>
+      </div>
+      <label>Ports</label>
+      <div class="inserted_ports_wrapper">
+        {#each ports_filter as port_filter}
+          <span>
+            {port_filter.port} {get_dir_as_text(port_filter.dir)}
+            <button on:click={() => remove_port_filter(port_filter)} aria-label="click to remove">X</button>
+          </span>
+        {/each}
+      </div>
+      <div>
+        <form id="port_filter_form">
+          <input type="number" bind:value={form_port_filter.port} placeholder="Ip address" />
+          <select bind:value={form_port_filter.dir}>
+            <option value={FilterDir.Both}>both</option>
+            <option value={FilterDir.Src}>src</option>
+            <option value={FilterDir.Dst}>dst</option>
+          </select>
+          <button type="button" on:click={add_port_filter}>Add</button>
+        </form>
+      </div>
+      <label for="protocol-filter">Protocols</label>
+      <select id="protocol-filter" bind:value={form_protocol_filter} on:change={update_stored_filter}>
+        {#each protocol_filters as protocol}
+          <option value={protocol}>{protocol}</option>
+        {/each}
+      </select>
     {/if}
   </div>
 </div>
@@ -177,11 +281,52 @@
     width: 100%;
     & div {
       width: 100%;
-      margin: 0px 0px 15px 0px;
+      margin: 0 0 15px 0;
     }
   }
   label {
     display: block;
-    margin: 0px 0px 5px 0px;
+    margin: 0 0 5px 0;
+  }
+  .inserted_ips_wrapper, .inserted_ports_wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 15px !important;
+
+    & span {
+      background-color: var(--color-accent-secondary);
+      border-radius: 18px;
+      padding: 5px 15px;
+      margin-right: 5px;
+      margin-bottom: 4px;
+
+      & button {
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin-left: 5px;
+      }
+    }
+  }
+
+  #ip_filter_form, #port_filter_form {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  #ip_filter_form input, #port_filter_form input {
+    max-width: 200px;
+    margin-right: 10px;
+  }
+
+  #ip_filter_form select, #port_filter_form select {
+    max-width: 100px;
+    margin-right: 10px;
   }
 </style>
