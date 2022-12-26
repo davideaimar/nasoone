@@ -4,8 +4,8 @@ export type ReportEntry = {
     dest_ip: string,
     dest_port: number,
     protocols: string[],
-    first_ts: number,
-    last_ts: number,
+    first_ts: Date,
+    last_ts: Date,
     bytes: number,
     packets: number,
 };

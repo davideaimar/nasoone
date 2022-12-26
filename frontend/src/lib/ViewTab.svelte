@@ -70,8 +70,8 @@
                             dest_ip: dst_ip,
                             dest_port: dst_port,
                             protocols: protocols,
-                            first_ts: first_ts,
-                            last_ts: last_ts,
+                            first_ts: new Date(Number(first_ts)),
+                            last_ts: new Date(Number(last_ts)),
                             bytes: Number(bytes),
                             packets: Number(packets)
                         } as ReportEntry);
@@ -82,6 +82,13 @@
         } catch (e) {
             console.log(e);
         }
+    }
+
+    const format_date = (date) => {
+        const now = new Date();
+        const offsetMs = now.getTimezoneOffset() * 60 * 1000;
+        const dateLocal = new Date(date.getTime() - offsetMs);
+        return dateLocal.toISOString().replace(/-/g, "/").replace(/[T|Z]/g, " ");
     }
 
     const update_file = async () => {
@@ -154,8 +161,8 @@
                             <td>{entry.dest_ip}</td>
                             <td>{entry.dest_port}</td>
                             <td>{entry.protocols}</td>
-                            <td>{entry.first_ts}</td>
-                            <td>{entry.last_ts}</td>
+                            <td>{format_date(entry.first_ts)}</td>
+                            <td>{format_date(entry.last_ts)}</td>
                             <td>{entry.bytes}</td>
                             <td>{entry.packets}</td>
                         </tr>
