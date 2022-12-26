@@ -3,12 +3,14 @@
     import type {ReportEntry} from "../types/ReportEntry";
     import {readTextFile} from "@tauri-apps/api/fs";
     import {invoke} from "@tauri-apps/api";
+    import {ViewOrder} from "../types/ViewOrder";
 
     let report_data: ReportEntry[] = [];
     let report_path: string = "";
     let filter: string = "";
     let file_size: number;
     let poller;
+    let order = ViewOrder.FirstTsAsc;
 
     const setupPoller = () => {
         if (poller) {
@@ -42,6 +44,49 @@
         return item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0";
     }
 
+    const sort_data = (report_data) => {
+        switch (order) {
+            case ViewOrder.FirstTsAsc:
+                return report_data.sort((a, b) => a.first_ts - b.first_ts);
+            case ViewOrder.FirstTsDesc:
+                return report_data.sort((a, b) => b.first_ts - a.first_ts);
+            case ViewOrder.LastTsAsc:
+                return report_data.sort((a, b) => a.last_ts - b.last_ts);
+            case ViewOrder.LastTsDesc:
+                return report_data.sort((a, b) => b.last_ts - a.last_ts);
+            case ViewOrder.PacketsAsc:
+                return report_data.sort((a, b) => a.packets - b.packets);
+            case ViewOrder.PacketsDesc:
+                return report_data.sort((a, b) => b.packets - a.packets);
+            case ViewOrder.BytesAsc:
+                return report_data.sort((a, b) => a.bytes - b.bytes);
+            case ViewOrder.BytesDesc:
+                return report_data.sort((a, b) => b.bytes - a.bytes);
+            case ViewOrder.SrcIpAsc:
+                return report_data.sort((a, b) => a.source_ip.localeCompare(b.source_ip));
+            case ViewOrder.SrcIpDesc:
+                return report_data.sort((a, b) => b.source_ip.localeCompare(a.source_ip));
+            case ViewOrder.DstIpAsc:
+                return report_data.sort((a, b) => a.dest_ip.localeCompare(b.dest_ip));
+            case ViewOrder.DstIpDesc:
+                return report_data.sort((a, b) => b.dest_ip.localeCompare(a.dest_ip));
+            case ViewOrder.SrcPortAsc:
+                return report_data.sort((a, b) => a.source_port - b.source_port);
+            case ViewOrder.SrcPortDesc:
+                return report_data.sort((a, b) => b.source_port - a.source_port);
+            case ViewOrder.DstPortAsc:
+                return report_data.sort((a, b) => a.dest_port - b.dest_port);
+            case ViewOrder.DstPortDesc:
+                return report_data.sort((a, b) => b.dest_port - a.dest_port);
+            case ViewOrder.ProtocolAsc:
+                return report_data.sort((a, b) => a.protocols.localeCompare(b.protocols));
+            case ViewOrder.ProtocolDesc:
+                return report_data.sort((a, b) => b.protocols.localeCompare(a.protocols));
+            default:
+                return report_data;
+        }
+    }
+
     const parse_file = async () => {
         if (!report_path || report_path === "")
             return;
@@ -70,18 +115,30 @@
                             dest_ip: dst_ip,
                             dest_port: dst_port,
                             protocols: protocols,
-                            first_ts: first_ts,
-                            last_ts: last_ts,
+                            first_ts: new Date(Number(first_ts)),
+                            last_ts: new Date(Number(last_ts)),
                             bytes: Number(bytes),
                             packets: Number(packets)
                         } as ReportEntry);
                 }
-                report_data = report_data.sort((a, b) => a.first_ts - b.first_ts);
+                report_data = sort_data(report_data);
                 console.log("Data loaded!");
             }
         } catch (e) {
             console.log(e);
         }
+    }
+
+    const format_date = (date) => {
+        const now = new Date();
+        const offsetMs = now.getTimezoneOffset() * 60 * 1000;
+        const dateLocal = new Date(date.getTime() - offsetMs);
+        return dateLocal.toISOString().replace(/-/g, "/").replace(/[T|Z]/g, " ");
+    }
+
+    const set_order = (new_order: ViewOrder) => {
+        order = new_order;
+        report_data = sort_data(report_data);
     }
 
     const update_file = async () => {
@@ -135,15 +192,15 @@
             <table>
                 <thead class="tbl-header">
                     <tr>
-                        <th>Source IP</th>
-                        <th>Source port</th>
-                        <th>Destination IP</th>
-                        <th>Dest port</th>
-                        <th>Protocols</th>
-                        <th>First packet time</th>
-                        <th>Last packet time</th>
-                        <th>Bytes</th>
-                        <th>Packets</th>
+                        <th class:order-asc="{order === ViewOrder.SrcIpAsc }" class:order-desc="{order === ViewOrder.SrcIpDesc }" on:click={() => order === ViewOrder.SrcIpAsc ? set_order(ViewOrder.SrcIpDesc) : set_order(ViewOrder.SrcIpAsc)}>Source IP</th>
+                        <th class:order-asc="{order === ViewOrder.SrcPortAsc }" class:order-desc="{order === ViewOrder.SrcPortDesc }" on:click={() => order === ViewOrder.SrcPortAsc ? set_order(ViewOrder.SrcPortDesc) : set_order(ViewOrder.SrcPortAsc)}>Source port</th>
+                        <th class:order-asc="{order === ViewOrder.DstIpAsc }" class:order-desc="{order === ViewOrder.DstIpDesc }" on:click={() => order === ViewOrder.DstIpAsc ? set_order(ViewOrder.DstIpDesc) : set_order(ViewOrder.DstIpAsc)}>Destination IP</th>
+                        <th class:order-asc="{order === ViewOrder.DstPortAsc }" class:order-desc="{order === ViewOrder.DstPortDesc }" on:click={() => order === ViewOrder.DstPortAsc ? set_order(ViewOrder.DstPortDesc) : set_order(ViewOrder.DstPortAsc)}>Dest port</th>
+                        <th class:order-asc="{order === ViewOrder.ProtocolAsc }" class:order-desc="{order === ViewOrder.ProtocolDesc }" on:click={() => order === ViewOrder.ProtocolAsc ? set_order(ViewOrder.ProtocolDesc) : set_order(ViewOrder.ProtocolAsc)}>Protocols</th>
+                        <th class:order-asc="{order === ViewOrder.FirstTsAsc }" class:order-desc="{order === ViewOrder.FirstTsDesc }" on:click={() => order === ViewOrder.FirstTsAsc ? set_order(ViewOrder.FirstTsDesc) : set_order(ViewOrder.FirstTsAsc)}>First packet time</th>
+                        <th class:order-asc="{order === ViewOrder.LastTsAsc }" class:order-desc="{order === ViewOrder.LastTsDesc }" on:click={() => order === ViewOrder.LastTsAsc ? set_order(ViewOrder.LastTsDesc) : set_order(ViewOrder.LastTsAsc)}>Last packet time</th>
+                        <th class:order-asc="{order === ViewOrder.BytesAsc }" class:order-desc="{order === ViewOrder.BytesDesc }" on:click={() => order === ViewOrder.BytesAsc ? set_order(ViewOrder.BytesDesc) : set_order(ViewOrder.BytesAsc)}>Bytes</th>
+                        <th class:order-asc="{order === ViewOrder.PacketsAsc }" class:order-desc="{order === ViewOrder.PacketsDesc }" on:click={() => order === ViewOrder.PacketsAsc ? set_order(ViewOrder.PacketsDesc) : set_order(ViewOrder.PacketsAsc)}>Packets</th>
                     </tr>
                 </thead>
                 <tbody class="tbl-content">
@@ -154,9 +211,9 @@
                             <td>{entry.dest_ip}</td>
                             <td>{entry.dest_port}</td>
                             <td>{entry.protocols}</td>
-                            <td>{entry.first_ts}</td>
-                            <td>{entry.last_ts}</td>
-                            <td>{entry.bytes}</td>
+                            <td>{format_date(entry.first_ts)}</td>
+                            <td>{format_date(entry.last_ts)}</td>
+                            <td>{formatBytes(entry.bytes, 2)}B</td>
                             <td>{entry.packets}</td>
                         </tr>
                     {/each}
@@ -216,6 +273,16 @@
       font-size: 12px;
       color: #fff;
       text-transform: uppercase;
+      -webkit-user-select: none; /* Safari */
+      -ms-user-select: none; /* IE 10 and IE 11 */
+      user-select: none; /* Standard syntax */
+      cursor: pointer;
+      &::after {
+        content: " ";
+        margin-left: 5px;
+        display: inline-block;
+        width: 15px;
+      }
     }
     td{
       padding: 15px;
@@ -225,5 +292,21 @@
       font-size: 12px;
       color: #fff;
       border-bottom: solid 1px rgba(255,255,255,0.1);
+    }
+
+    .order-desc::after{
+      content: "▼";
+    }
+
+    .order-asc::after{
+      content: "▲";
+    }
+
+    .order-asc::after, .order-desc::after{
+      margin-left: 5px;
+    }
+
+    .order-asc, .order-desc{
+      display: flex;
     }
 </style>

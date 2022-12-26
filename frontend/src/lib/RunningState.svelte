@@ -88,7 +88,7 @@
         </button>
         <p>{n_formatter(tot_packets, 1)} packets received</p>
     </div>
-
+    <div></div>
     <button class="stop-button" on:click={stop}>Stop</button>
 </div>
 
@@ -101,8 +101,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: space-between;
-        height: 100vh;
-        width: 100vw;
+        height: calc(100vh - 115px);
     }
 
     .action-wrapper{
@@ -127,5 +126,7 @@
 
     .stop-button{
         background-color: var(--color-error);
+        position: fixed;
+        bottom: 20px;
     }
 </style>
