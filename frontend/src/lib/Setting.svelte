@@ -18,7 +18,7 @@
   const load_devices = (async () => {
     const devices = (await invoke("get_devices")) as string;
     const device_list = JSON.parse(devices);
-    settings.device = device_list[0];
+    settings.device = device_list[0][0];
     return device_list;
   })();
 
@@ -156,7 +156,7 @@
       <select name="device" id="device" bind:value={settings.device}>
         <option value="">Select an interface</option>
         {#each devices as device}
-          <option value={device}>{device}</option>
+          <option value={device[0]}>{device[1]}</option>
         {/each}
       </select>
     {:catch _error}
