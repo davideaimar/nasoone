@@ -38,7 +38,7 @@ fn get_bpf_filter_from_easy_filter(src_ips: Vec<&str>, dst_ips: Vec<&str>, src_p
 #[tauri::command]
 fn get_devices() -> Result<String, String> {
     let devices = Nasoone::list_devices().map_err(|e| e.to_string())?;
-    let devices = devices.into_iter().map(|d| d.to_string()).collect::<Vec<_>>();
+    let devices = devices.into_iter().map(|d| (d.get_name().to_string(), d.to_string())).collect::<Vec<_>>();
     Ok(serde_json::to_string(&devices).unwrap())
 }
 

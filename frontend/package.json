@@ -7,10 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "tauri": "cd .. && tauri"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^1.0.1",
+    "@tauri-apps/cli": "^1.2.2",
     "@tsconfig/svelte": "^3.0.0",
     "@zerodevx/svelte-toast": "^0.7.2",
     "sass": "^1.53.0",
@@ -22,7 +24,6 @@
     "vite": "^3.0.0"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.1.0",
-    "@tauri-apps/cli": "^1.1.1"
+    "@tauri-apps/api": "^1.1.0"
   }
 }
