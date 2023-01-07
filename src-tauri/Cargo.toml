@@ -1,6 +1,6 @@
 [package]
 name = "nasoone"
-version = "0.2.3"
+version = "0.2.4"
 description = "An app to get statistics on network traffic"
 authors = ["davide.aimar99@gmail.com"]
 license = ""
@@ -18,7 +18,7 @@ tauri-build = { version = "1.0.4", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.1.1", features = ["api-all"] }
-nasoone-lib = "0.2.4"
+nasoone-lib = "0.2.5"
 
 [features]
 # by default Tauri runs in production mode
